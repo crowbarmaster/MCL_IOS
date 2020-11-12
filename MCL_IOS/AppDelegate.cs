@@ -1,4 +1,5 @@
-﻿using Foundation;
+﻿using CoreGraphics;
+using Foundation;
 using UIKit;
 
 namespace IOS_MCL
@@ -20,7 +21,9 @@ namespace IOS_MCL
         {
             // create a new window instance based on the screen size
             Window = new UIWindow(UIScreen.MainScreen.Bounds);
-            Window.RootViewController = new UIViewController();
+            var controller = new MainView();
+
+            Window.RootViewController = controller;
 
             // make the window visible
             Window.MakeKeyAndVisible();
