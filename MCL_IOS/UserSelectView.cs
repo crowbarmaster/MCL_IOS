@@ -37,14 +37,14 @@ namespace IOS_MCL
             for(int i = 0; i<users.Length; i++)
             {
                 var submitButton = UIButton.FromType(UIButtonType.RoundedRect);
-                submitButton.Frame = new CGRect(w / 32, (h / 2) - (h / 12) + (i * 20), w - (w / 16), h / 16);
+                submitButton.Frame = new CGRect(w / 32, (h / 2) - (i * (h/15)), w - (w / 16), h / 16);
                 submitButton.SetTitle(users[i], UIControlState.Normal);
                 submitButton.BackgroundColor = UIColor.White;
                 submitButton.Layer.CornerRadius = 5f;
                 submitButton.TouchUpInside += (sender, e) => {
                     Console.WriteLine("Submit button pressed");
                 };
-                View.AddSubview(new UIView { submitButton });
+                View.AddSubview(submitButton);
             }
 
             // Perform any additional setup after loading the view

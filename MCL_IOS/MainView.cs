@@ -26,14 +26,14 @@ namespace IOS_MCL
         {           
             base.ViewDidLoad();
 
-
+            SimpleBackgroundTransferViewController urlHandle = new SimpleBackgroundTransferViewController();
+            urlHandle.Start();
             
             UIScreen main = UIScreen.MainScreen;
             nfloat w = main.Bounds.Size.Width;
             nfloat h = main.Bounds.Size.Height;
-            var userSelect = new UserSelectView();
 
-            View.BackgroundColor = new UIColor(160 / 255, 1, 1, .5f);
+            View.BackgroundColor = new UIColor(140 / 255, 200 / 255, 1, 1);
 
             var appLbl = new UILabel();
             appLbl.Text = "Midlakes Cleaner Log";
@@ -49,8 +49,12 @@ namespace IOS_MCL
             submitButton.SetTitle("Start Cleaning", UIControlState.Normal);
             submitButton.BackgroundColor = UIColor.White;
             submitButton.Layer.CornerRadius = 5f;
-            submitButton.TouchUpInside += (sender, e) => {
+            RoomSelectView RSV = new RoomSelectView();
+            RSV.ModalPresentationStyle = UIModalPresentationStyle.FullScreen;
+            submitButton.TouchUpInside += delegate 
+            {
                 Console.WriteLine("Submit button pressed");
+                PresentViewController(RSV, true, null);
             };
             View.AddSubview(submitButton);
 
@@ -59,10 +63,12 @@ namespace IOS_MCL
             userButton.SetTitle("Select User", UIControlState.Normal);
             userButton.BackgroundColor = UIColor.White;
             userButton.Layer.CornerRadius = 5f;
+            UserSelectView USV = new UserSelectView();
+            USV.ModalPresentationStyle = UIModalPresentationStyle.FullScreen;
             userButton.TouchUpInside += delegate
             {
                 Console.WriteLine("Select user button pressed");
-                PresentViewController(userSelect, true, null);
+                PresentViewController(new UserSelectView(), true, null);
             };
             View.AddSubview(userButton);
 
