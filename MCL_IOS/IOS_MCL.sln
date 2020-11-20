@@ -9,6 +9,8 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|iPhone = Debug|iPhone
 		Debug|iPhoneSimulator = Debug|iPhoneSimulator
+		Debug-Sim|iPhone = Debug-Sim|iPhone
+		Debug-Sim|iPhoneSimulator = Debug-Sim|iPhoneSimulator
 		Release|iPhone = Release|iPhone
 		Release|iPhoneSimulator = Release|iPhoneSimulator
 	EndGlobalSection
@@ -17,6 +19,10 @@ Global
 		{613A7320-6C5D-4D8C-8E13-949C7938F900}.Debug|iPhone.Build.0 = Debug|iPhone
 		{613A7320-6C5D-4D8C-8E13-949C7938F900}.Debug|iPhoneSimulator.ActiveCfg = Debug|iPhoneSimulator
 		{613A7320-6C5D-4D8C-8E13-949C7938F900}.Debug|iPhoneSimulator.Build.0 = Debug|iPhoneSimulator
+		{613A7320-6C5D-4D8C-8E13-949C7938F900}.Debug-Sim|iPhone.ActiveCfg = Debug-Sim|iPhone
+		{613A7320-6C5D-4D8C-8E13-949C7938F900}.Debug-Sim|iPhone.Build.0 = Debug-Sim|iPhone
+		{613A7320-6C5D-4D8C-8E13-949C7938F900}.Debug-Sim|iPhoneSimulator.ActiveCfg = Debug-Sim|iPhoneSimulator
+		{613A7320-6C5D-4D8C-8E13-949C7938F900}.Debug-Sim|iPhoneSimulator.Build.0 = Debug-Sim|iPhoneSimulator
 		{613A7320-6C5D-4D8C-8E13-949C7938F900}.Release|iPhone.ActiveCfg = Release|iPhone
 		{613A7320-6C5D-4D8C-8E13-949C7938F900}.Release|iPhone.Build.0 = Release|iPhone
 		{613A7320-6C5D-4D8C-8E13-949C7938F900}.Release|iPhoneSimulator.ActiveCfg = Release|iPhoneSimulator

@@ -12,6 +12,7 @@ namespace IOS_MCL
     {
         public NotesView()
         {
+
         }
 
         public override void DidReceiveMemoryWarning()

@@ -5,6 +5,7 @@ using CoreFoundation;
 using UIKit;
 using Foundation;
 using CoreGraphics;
+using System.Collections.Generic;
 
 namespace IOS_MCL
 {
@@ -25,30 +26,26 @@ namespace IOS_MCL
         public override void ViewDidLoad()
         {           
             base.ViewDidLoad();
-
-            SimpleBackgroundTransferViewController urlHandle = new SimpleBackgroundTransferViewController();
-            urlHandle.Start();
             
             UIScreen main = UIScreen.MainScreen;
             nfloat w = main.Bounds.Size.Width;
             nfloat h = main.Bounds.Size.Height;
-
-            View.BackgroundColor = new UIColor(140 / 255, 200 / 255, 1, 1);
+            Globals.DataTypes.PopulateData();
+            View.BackgroundColor = Globals.Colors.Backdrop;
 
             var appLbl = new UILabel();
+            appLbl.Frame = new CGRect(w * .10, h * .05, w * .80, h * .15);
             appLbl.Text = "Midlakes Cleaner Log";
             appLbl.TextAlignment = UITextAlignment.Center;
-            appLbl.AutoresizingMask = UIViewAutoresizing.FlexibleWidth;
-            appLbl.MinimumScaleFactor = 10;
-            appLbl.Font = UIFont.FromName("GillSans", 42f);
-            appLbl.Frame = new CGRect(-(w/2), h/28, w, h/14);
+            appLbl.Font = Globals.SizeLabelToRect(appLbl);
             View.AddSubview(appLbl);
 
             var submitButton = UIButton.FromType(UIButtonType.RoundedRect);
-            submitButton.Frame = new CGRect(w/32, (h/2) - (h/12), w - (w/16), h/16);
+            submitButton.Frame = new CGRect(w*.10, h*.3, w*.80, h*.15);
             submitButton.SetTitle("Start Cleaning", UIControlState.Normal);
             submitButton.BackgroundColor = UIColor.White;
             submitButton.Layer.CornerRadius = 5f;
+            submitButton.Font = Globals.SizeLabelToRect(submitButton);
             RoomSelectView RSV = new RoomSelectView();
             RSV.ModalPresentationStyle = UIModalPresentationStyle.FullScreen;
             submitButton.TouchUpInside += delegate 
@@ -59,16 +56,17 @@ namespace IOS_MCL
             View.AddSubview(submitButton);
 
             var userButton = UIButton.FromType(UIButtonType.RoundedRect);
-            userButton.Frame = new CGRect(w/32, (h / 2) + (h/12), w - (w / 16), h/16);
+            userButton.Frame = new CGRect(w * .10, h * .5, w * .80, h * .15);
             userButton.SetTitle("Select User", UIControlState.Normal);
             userButton.BackgroundColor = UIColor.White;
             userButton.Layer.CornerRadius = 5f;
+            userButton.Font = Globals.SizeLabelToRect(userButton);
             UserSelectView USV = new UserSelectView();
             USV.ModalPresentationStyle = UIModalPresentationStyle.FullScreen;
             userButton.TouchUpInside += delegate
             {
                 Console.WriteLine("Select user button pressed");
-                PresentViewController(new UserSelectView(), true, null);
+                PresentViewController(USV, true, null);
             };
             View.AddSubview(userButton);
 
