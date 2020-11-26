@@ -34,8 +34,20 @@ namespace IOS_MCL
 
             base.ViewDidLoad();
 
+            UIButton GoBack = UIButton.FromType(UIButtonType.RoundedRect);
+            GoBack.Frame = new CGRect(w * .40, h * .02, w * .20, h * .08);
+            GoBack.SetTitle("Back a menu", UIControlState.Normal);
+            GoBack.BackgroundColor = UIColor.White;
+            GoBack.Layer.CornerRadius = 5f;
+            GoBack.Font = SizeLabelToRect(GoBack);
+            GoBack.TouchUpInside += delegate
+            {
+                DismissViewController(true, null);
+            };
+            View.AddSubview(GoBack); 
+
             UILabel Title = new UILabel();
-            Title.Frame = new CGRect(w * .10, (h * .1), w * .80, h * .1);
+            Title.Frame = new CGRect(w * .10, h * .1, w * .80, h * .1);
             Title.Text = "Select your name:";
             Title.Font = SizeLabelToRect(Title);
             Title.TextAlignment = UITextAlignment.Center;
@@ -65,6 +77,8 @@ namespace IOS_MCL
                         ActiveUser.CompletedRooms = new Dictionary<string, List<string>>();
                         ActiveUser.RemainingRooms = new List<string>();
                     }
+                    MainView.infoLabel.Text = "Welcome, " + ActiveUser.fullname + ". You are logged in.";
+                    MainView.infoLabel.Font = SizeLabelToRect(MainView.infoLabel);
                     foreach (string AssignedRoom in ActiveUser.rooms.Split(';'))
                     {
                         ActiveUser.RemainingRooms.Add(AssignedRoom);
@@ -78,7 +92,7 @@ namespace IOS_MCL
                                 ActiveRecord = rec;
                                 if (!rec.data.Equals("0"))
                                 {
-                                    string[] ExplodeRecords = rec.data.Substring(0, rec.data.Length - 1).Split('>');
+                                    string[] ExplodeRecords = rec.data.Split('>');
                                     foreach (string expRoom in ExplodeRecords)
                                     {
                                         string[] ExplodeRoom = expRoom.Split(';');
@@ -91,6 +105,13 @@ namespace IOS_MCL
                                 }
                                 if (rec.lastroom != "NA")
                                 {
+                                    foreach(DataTypes.Room room in DataTypes.Rooms.rooms)
+                                    {
+                                        if(room.rid == rec.lastroom)
+                                        {
+                                            ActiveRoom = room;
+                                        }
+                                    }
                                     ActiveUser.RemainingRooms.Remove(rec.lastroom);
                                 }
                             }
@@ -112,7 +133,7 @@ namespace IOS_MCL
                     {
                         Console.WriteLine("User " + ActiveUser.fullname + " Selected. Does not have record on file.");
                     }
-                    DismissModalViewController(true);
+                    DismissViewController(true, null);
                 };
                 View.AddSubview(userBtn);
             }

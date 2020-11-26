@@ -23,7 +23,7 @@ namespace IOS_MCL
         {
             // create a new window instance based on the screen size
             Window = new UIWindow(UIScreen.MainScreen.Bounds);
-            var controller = new MainView();
+            var controller = ViewProvider.MainView();
 
             Window.RootViewController = controller;
 

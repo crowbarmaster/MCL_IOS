@@ -101,6 +101,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ViewProvider.cs" />
     <Compile Include="Views\AudView.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="URLHander.cs" />

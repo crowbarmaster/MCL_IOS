@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CoreGraphics;
 using Foundation;
@@ -16,19 +15,52 @@ namespace IOS_MCL
         public static DataTypes.PendingRecord ActiveRecord;
         public static DataTypes.Room ActiveRoom;
         public static DataTypes.User ActiveUser;
+        public static string MainMenuInfo;
+        public static bool SkippedRoomSelect = false;
+        public static TaskFactory TaskFactory;
+        public static CancellationTokenSource PopulateCTS;
+        public static CancellationTokenSource UpdateTempCTS;
+        public static CancellationTokenSource UpdateFinalCTS;
 
-        public static class Colors
+        public static string GetDate()
         {
-        public static UIColor White = new UIColor(1, 1, 1, 1);
-        public static UIColor Green = new UIColor(0, 1, 0, 1);
-        public static UIColor Backdrop = new UIColor(.3f, .6f, 1, 1);
+            string year = DateTime.Now.Year.ToString();
+            string month = DateTime.Now.Month.ToString();
+            string day = DateTime.Now.Day.ToString();
+
+            return  month + "-" + day + "-" + year;
         }
 
+        public static string GetTime(bool isMili)
+        {
+            string hour = DateTime.Now.Hour.ToString();
+            string min = DateTime.Now.Minute.ToString();
+            string sec = DateTime.Now.Second.ToString();
+            string msec = DateTime.Now.Millisecond.ToString();
+
+            if (isMili)
+            {
+                return hour + "." + min + "." + sec + "." + msec;
+            }
+            return hour + "." + min + "." + sec;
+        }
+        public static class Colors
+        {
+            public static UIColor White = new UIColor(1, 1, 1, 1);
+            public static UIColor Green = new UIColor(0, 1, 0, 1);
+            public static UIColor Red = new UIColor(1, 0, 0, 1);
+            public static UIColor Backdrop = new UIColor(.3f, .6f, 1, 1);
+        }
         public static class DataTypes
         {
             public static UserRoot Users = new UserRoot();
             public static RoomRoot Rooms = new RoomRoot();
             public static PendingRecordRoot Records = new PendingRecordRoot();
+            public static bool TempUpdateBusy = false;
+            public static List<PendingRecord> TempUpdateQueue = new List<PendingRecord>();
+            public static bool FinalUpdateBusy = false;
+            public static List<PendingRecord> FinalUpdateQueue = new List<PendingRecord>();
+            public static HttpClient client = new HttpClient();
 
             public class User
             {
@@ -80,9 +112,8 @@ namespace IOS_MCL
                 public List<PendingRecord> pending_records { get; set; }
             }
 
-            public static async Task PopulateData ()
+            public static async Task PopulateData()
             {
-                HttpClient client = new HttpClient();
                 List<KeyValuePair<string, string>> userKvp = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("cmd", "get"),
@@ -115,12 +146,12 @@ namespace IOS_MCL
                     Console.WriteLine("Error: " + e.Message);
                 }
 
-                foreach(User user in Users.users)
+                foreach (User user in Users.users)
                 {
                     Console.WriteLine("User with ID of: " + user.uid + " added to list!");
                     user.fullname = user.fname + " " + user.lname;
                 }
-                foreach(Room room in Rooms.rooms)
+                foreach (Room room in Rooms.rooms)
                 {
                     char[] explodeData = room.data.ToCharArray();
                     room.hasS = CharToBool(explodeData[0]);
@@ -129,13 +160,125 @@ namespace IOS_MCL
                     room.hasCarpet = CharToBool(explodeData[3]);
                     room.hasBRoom = CharToBool(explodeData[4]);
                     room.hasSani = CharToBool(explodeData[5]);
-                    Console.WriteLine("Room with ID of: " + room.rid + " added to list! bools: "+room.hasS+" "+room.hasT+" "+room.hasFloor+" "+room.hasCarpet+" "+room.hasSani);
+                    Console.WriteLine("Room with ID of: " + room.rid + " added to list! bools: " + room.hasS + " " + room.hasT + " " + room.hasFloor + " " + room.hasCarpet + " " + room.hasSani);
                 }
-                foreach(PendingRecord rec in Records.pending_records)
+                foreach (PendingRecord rec in Records.pending_records)
                 {
                     Console.WriteLine("Record with userID of: " + rec.userid + " added to list!");
                 }
             }
+
+            public static async Task UpdateTempRecord(PendingRecord record)
+            {
+                TempUpdateQueue.Add(record);
+                List<KeyValuePair<string, string>> recordKvp = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("cmd", "ins"),
+                new KeyValuePair<string, string>("val1", "pending_records")
+            };
+                if (!TempUpdateBusy)
+                {
+                    if (TempUpdateQueue.Count > 0)
+                    {
+                        TempUpdateBusy = true;
+                        PendingRecord rec = TempUpdateQueue[0];
+                        string Keys = "`userid`, `date`, `data`, `lastroom`, `lastdata`";
+                        string Vals = "'" + rec.userid + "', '" + rec.date + "', '" + rec.data + "', '" + rec.lastroom + "', '" + rec.lastdata + "'";
+                        recordKvp.Add(new KeyValuePair<string, string>("val2", Keys));
+                        recordKvp.Add(new KeyValuePair<string, string>("val3", Vals));
+                        HttpResponseMessage recResult = await client.PostAsync("http://69.207.170.153:8237/restsrv/RestController.php?", new FormUrlEncodedContent(recordKvp));
+                        if (recResult.Content.ReadAsStringAsync().Result == "1")
+                        {
+                            Console.WriteLine("UpdateTempRecord: HTTP POST replied OK!");
+                            TempUpdateQueue.Remove(TempUpdateQueue[0]);
+                            if (TempUpdateQueue.Count > 0)
+                            {
+                                TempUpdateBusy = false;
+                                await UpdateTempRecord(TempUpdateQueue[0]);
+                                return;
+                            }
+                            return;
+                        }
+                        else
+                        {
+                            Console.WriteLine("ERROR! Globals.DataTypes.UpdateTempRecord: Post response not 1. Response: " + recResult.Content.ReadAsStringAsync().Result);
+                            Console.WriteLine("UpdateTempRecord: Delaying 10 seconds before reattempt of HTTP POST...");
+                            Thread.Sleep(10000);
+                            TempUpdateBusy = false;
+                            await UpdateTempRecord(rec);
+                        }
+                    }
+                }
+            }
+
+            public static async Task FinalizeRecord(PendingRecord record)
+            {
+                FinalUpdateQueue.Add(record);
+                List<KeyValuePair<string, string>> recordKvp = new List<KeyValuePair<string, string>>
+                {
+                    new KeyValuePair<string, string>("cmd", "ins"),
+                    new KeyValuePair<string, string>("val1", "pending_records")
+                };
+
+                if (FinalUpdateQueue.Count > 0 && !TempUpdateBusy && TempUpdateQueue.Count == 0)
+                {
+                    FinalUpdateBusy = true;
+                    PendingRecord rec = FinalUpdateQueue[0];
+                    ActiveUser.CompletedRooms[rec.lastroom] = new List<string> { rec.lastroom, GetTime(false), rec.lastdata };
+                    string Keys = "`userid`, `date`, `data`, `lastroom`, `lastdata`";
+                    string Vals = "'" + rec.userid + "', '" + rec.date + "', '" + ConcatRecords() + "', 'NA', 'NA'";
+                    recordKvp.Add(new KeyValuePair<string, string>("val2", Keys));
+                    recordKvp.Add(new KeyValuePair<string, string>("val3", Vals));
+                    HttpResponseMessage recResult = await client.PostAsync("http://69.207.170.153:8237/restsrv/RestController.php?", new FormUrlEncodedContent(recordKvp));
+                    if (recResult.Content.ReadAsStringAsync().Result == "1")
+                    {
+                        Console.WriteLine("FinalizeRecord: HTTP POST replied OK!");
+                        ActiveUser.RemainingRooms.Remove(rec.lastroom);
+                        rec.lastroom = "NA";
+                        rec.lastdata = "NA";
+                        ActiveRecord = rec;
+                        FinalUpdateQueue.Remove(FinalUpdateQueue[0]);
+                        if (FinalUpdateQueue.Count > 0)
+                        {
+                            FinalUpdateBusy = false;
+                            await FinalizeRecord(FinalUpdateQueue[0]);
+                            return;
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        Console.WriteLine("ERROR! Globals.DataTypes.FinalizeRecord: Post response not 1. Response: " + recResult.Content.ReadAsStringAsync().Result);
+                        Console.WriteLine("FinalizeRecord: Delaying 10 seconds before reattempt of HTTP POST...");
+                        Thread.Sleep(10000);
+                        FinalUpdateBusy = false;
+                        await FinalizeRecord(rec);
+                        return;
+                    }
+                }
+                return;
+            }
+        }
+
+        public static string ConcatRecords()
+        {
+            string outstr = "";
+            if(ActiveUser.CompletedRooms.Count == 0)
+            {
+                return "0";
+            }
+            foreach(KeyValuePair<string, List<string>> room in ActiveUser.CompletedRooms)
+            {
+                if(outstr == "")
+                {
+                    outstr = room.Value[0] + ";" + room.Value[1] + ";" + room.Value[2];
+                }
+                else
+                {
+                    outstr += ">"+room.Value[0] + ";" + room.Value[1] + ";" + room.Value[2];
+                }
+            }
+            return outstr;
         }
 
         public static bool CharToBool (char input)
